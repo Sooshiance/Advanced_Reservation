@@ -1,13 +1,10 @@
 from django.db import models
 from django.core.validators import RegexValidator
-from django.contrib.auth.models import (
-    BaseUserManager, AbstractBaseUser
-)
-from django_jalali.db import models as jmodels
+from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 
 
 class AllUser(BaseUserManager):
-    def create_user(self, phone, email, password=None, first_name=None, last_name=None):
+    def create_user(self, phone, email, password=None, first_name=None, last_name=None, **kwargs):
         if not email:
             raise ValueError('کاربر باید پست الکترونیکی داشته باشد')
         
@@ -25,6 +22,7 @@ class AllUser(BaseUserManager):
             phone=phone,
             first_name=first_name,
             last_name=last_name,
+            **kwargs,
         )
         user.is_active = False
         user.set_password(password)
@@ -60,6 +58,16 @@ class AllUser(BaseUserManager):
         return user
 
 
+class UserType:
+    Vendor = 1
+    Customer = 2
+    
+    ROLE = (
+        ("Vendor", Vendor),
+        ("Customer", Customer),
+    )
+
+
 class User(AbstractBaseUser):
     alphanumeric = RegexValidator(r'^[0-9a-zA-Z]*$', message='فقط نمادهای الفبایی و اعداد پذیرفته میشوند')
     numbers      = RegexValidator(r'^[0-9a]*$', message='تنها اعداد پذیرفته میشوند')
@@ -70,7 +78,7 @@ class User(AbstractBaseUser):
     is_active    = models.BooleanField(default=False, null=False, verbose_name='وضعیت فعالیت')
     is_staff     = models.BooleanField(default=False, null=False, verbose_name='دسترسی ادمین')
     is_superuser = models.BooleanField(default=False, null=False, verbose_name='مدیر')
-    joined_at    = jmodels.jDateTimeField(auto_now_add=True, verbose_name='تاریخ عضویت')
+    role         = models.PositiveSmallIntegerField(choices=UserType.ROLE, default=2)
 
     objects = AllUser()
 
@@ -91,12 +99,21 @@ class User(AbstractBaseUser):
         return True
 
 
+class OTP(models.Model):
+    user  = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='کاربر')
+    otp  = models.DecimalField(max_digits=8, decimal_places=0, unique=True)
+    
+    def __str__(self) -> str:
+        return f"{self.user} {self.otp}"
+
+
 class Profile(models.Model):
     user       = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='کاربر')
     email      = models.EmailField(verbose_name='پست الکترونیکی')
     phone      = models.CharField(max_length=11, verbose_name='شماره تماس')
     first_name = models.CharField(max_length=30, null=True, blank=True, verbose_name='نام')
     last_name  = models.CharField(max_length=50, null=True, blank=True, verbose_name='نام خانوادگی')
+    role       = models.PositiveSmallIntegerField()
     
     def __str__(self) -> str:
         return f"{self.user} {self.email}"
