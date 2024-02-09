@@ -1,6 +1,6 @@
 venv
 .env
-dbsqlite3
+db.sqlite3
 migrations
 __pycache__
 /frontend/node_modules

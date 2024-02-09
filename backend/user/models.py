@@ -100,7 +100,7 @@ class User(AbstractBaseUser):
 
 
 class OTP(models.Model):
-    user  = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='کاربر')
+    user  = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='کاربر', related_name="user_otp")
     otp  = models.DecimalField(max_digits=8, decimal_places=0, unique=True)
     
     def __str__(self) -> str:

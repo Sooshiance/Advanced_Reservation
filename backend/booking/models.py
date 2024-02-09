@@ -25,9 +25,19 @@ class Date:
     )
 
 
-class Order(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    date_pick = models.PositiveSmallIntegerField(choices=Date.DATE_PICK, blank=True, null=True)
-    
+class Item(models.Model):
+    title = models.CharField(max_length=144, unique=True, primary_key=True)
+    description = models.CharField(max_length=244)
+
     def __str__(self) -> str:
-        return f"{self.user} {self.date_pick}"
+        return f""
+
+
+class Cart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    item = models.ManyToManyField(Item)
+    date_pick = models.PositiveSmallIntegerField(choices=Date.DATE_PICK)
+    peak = models.DurationField()
+    
+    class Meta:
+        unique_togather = ["peak", "date_pick"]
